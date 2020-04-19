@@ -1,114 +1,116 @@
 package me.tomassetti.examples.MarkupParser;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.TokenStream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.io.StringWriter;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit test for simple App.
  */
-public class AppTest extends TestCase
-{
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public AppTest( String testName )
-    {
-        super( testName );
-    }
+class AppTest {
+    MarkupErrorListener errorListener;
 
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite()
-    {
-        return new TestSuite( AppTest.class );
-    }            
-    
-    private MarkupParser setup(String input)
-    {            
-        ANTLRInputStream inputStream = new ANTLRInputStream(input);
-        this.markupLexer = new MarkupLexer(inputStream);
-        CommonTokenStream commonTokenStream = new CommonTokenStream(markupLexer);
-        MarkupParser markupParser = new MarkupParser(commonTokenStream);
-                
-        StringWriter writer = new StringWriter();
+    @BeforeEach
+    void initListener() {
+        final StringWriter writer = new StringWriter();
         this.errorListener = new MarkupErrorListener(writer);
-        markupLexer.removeErrorListeners();
-        //markupLexer.addErrorListener(errorListener);
-        markupParser.removeErrorListeners();
-        markupParser.addErrorListener(errorListener);
-
-        return markupParser;
     }
 
-    private MarkupErrorListener errorListener;
-    private MarkupLexer markupLexer;
+    @Test
+    @DisplayName("Test that simple text is recognized correctly")
+    public void testText() {
+        final MarkupLexer markupLexer = setupLexer("anything in here");
+        final MarkupParser markupParser = setupParser(markupLexer);
+        final MarkupParser.ContentContext context = markupParser.content();
 
-    public void testText()
-    {
-        MarkupParser parser = setup("anything in here");
-
-        MarkupParser.ContentContext context = parser.content();        
-        
-        assertEquals("",this.errorListener.getSymbol());
+        assertNull(context.exception);
+        assertEquals("", this.errorListener.getSymbol());
     }
 
-    public void testInvalidText()
-    {
-        MarkupParser parser = setup("[anything in here");
+    @Test
+    @DisplayName("Test that not valid text fails correctly")
+    public void testInvalidText() {
+        final MarkupLexer markupLexer = setupLexer("[anything in here");
+        final MarkupParser markupParser = setupParser(markupLexer);
 
-        MarkupParser.ContentContext context = parser.content();        
-        
+        final MarkupParser.ContentContext context = markupParser.content();
+
+        assertNotNull(context.exception);
+
         // note that this.errorListener.symbol could be empty
-        // when ANTLR doesn't recognize the token or there is no error.           
-        // In such cases check the output of errorListener        
-        assertEquals("[",this.errorListener.getSymbol());
+        // when ANTLR doesn't recognize the token or there is no error.
+        // In such cases check the output of errorListener
+        assertEquals("[", this.errorListener.getSymbol());
     }
 
-    public void testWrongMode()
-    {
-        MarkupParser parser = setup("author=\"john\"");                
+    @Test
+    @DisplayName("Test that default mode makes the correct parsing of an attribute impossible")
+    public void testWrongMode() {
+        final String s = "author=\"john\"";
+        final MarkupLexer markupLexer = setupLexer(s);
+        final MarkupParser markupParser = setupParser(markupLexer);
 
-        MarkupParser.AttributeContext context = parser.attribute(); 
-        TokenStream ts = parser.getTokenStream();        
-        
+        final MarkupParser.AttributeContext context = markupParser.attribute();
+        final TokenStream ts = markupParser.getTokenStream();
+
+        assertNotNull(context.exception);
+
         assertEquals(MarkupLexer.DEFAULT_MODE, markupLexer._mode);
-        assertEquals(MarkupLexer.TEXT,ts.get(0).getType());        
-        assertEquals("author=\"john\"",this.errorListener.getSymbol());
+        assertEquals(MarkupLexer.TEXT, ts.get(0).getType());
+        assertEquals(s, this.errorListener.getSymbol());
     }
 
-    public void testAttribute()
-    {
-        MarkupParser parser = setup("author=\"john\"");
-        // we have to manually push the correct mode
-        this.markupLexer.pushMode(MarkupLexer.BBCODE);
+    @Test
+    @DisplayName("Test that BBCode mode let us check a correct attribute")
+    public void testAttribute() {
+        final MarkupLexer markupLexer = setupLexer("author=\"john\"");
+        final MarkupParser markupParser = setupParser(markupLexer);
 
-        MarkupParser.AttributeContext context = parser.attribute(); 
-        TokenStream ts = parser.getTokenStream();        
-        
-        assertEquals(MarkupLexer.ID,ts.get(0).getType());
-        assertEquals(MarkupLexer.EQUALS,ts.get(1).getType());
-        assertEquals(MarkupLexer.STRING,ts.get(2).getType()); 
-        
-        assertEquals("",this.errorListener.getSymbol());
+        // we have to manually push the correct mode
+        markupLexer.pushMode(MarkupLexer.BBCODE);
+
+        final MarkupParser.AttributeContext context = markupParser.attribute();
+        final TokenStream ts = markupParser.getTokenStream();
+
+        assertNull(context.exception);
+
+        assertEquals(MarkupLexer.ID, ts.get(0).getType());
+        assertEquals(MarkupLexer.EQUALS, ts.get(1).getType());
+        assertEquals(MarkupLexer.STRING, ts.get(2).getType());
+
+        assertEquals("", this.errorListener.getSymbol());
     }
 
-    public void testInvalidAttribute()
-    {
-        MarkupParser parser = setup("author=/\"john\"");
+    @Test
+    @DisplayName("Test that BBCode mode let us check a wrong attribute")
+    public void testInvalidAttribute() {
+        final MarkupLexer markupLexer = setupLexer("author=/\"john\"");
+        final MarkupParser markupParser = setupParser(markupLexer);
+
         // we have to manually push the correct mode
-        this.markupLexer.pushMode(MarkupLexer.BBCODE);
-        
-        MarkupParser.AttributeContext context = parser.attribute();        
-        
-        assertEquals("/",this.errorListener.getSymbol());
+        markupLexer.pushMode(MarkupLexer.BBCODE);
+
+        MarkupParser.AttributeContext context = markupParser.attribute();
+
+        assertEquals("/", this.errorListener.getSymbol());
+    }
+
+    private MarkupLexer setupLexer(final String input) {
+        final MarkupLexer markupLexer = App.setupLexer(input);
+        markupLexer.removeErrorListeners();
+        markupLexer.addErrorListener(this.errorListener);
+        return markupLexer;
+    }
+
+    private MarkupParser setupParser(final MarkupLexer markupLexer) {
+        final MarkupParser markupParser = App.setupParser(markupLexer);
+        markupParser.removeErrorListeners();
+        markupParser.addErrorListener(this.errorListener);
+        return markupParser;
     }
 }

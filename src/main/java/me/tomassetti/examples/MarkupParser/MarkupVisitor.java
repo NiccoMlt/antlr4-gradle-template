@@ -1,88 +1,78 @@
 package me.tomassetti.examples.MarkupParser;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.*;
-import org.antlr.v4.runtime.tree.*;
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import me.tomassetti.examples.MarkupParser.MarkupParser.FileContext;
 
-public class MarkupVisitor extends MarkupParserBaseVisitor<String>
-{            
-    private PrintStream stream;
-    public MarkupVisitor(PrintStream stream)
-    {
+import java.io.PrintStream;
+
+public class MarkupVisitor extends MarkupParserBaseVisitor<String> {
+    private final PrintStream stream;
+
+    public MarkupVisitor(final PrintStream stream) {
         this.stream = stream;
     }
 
     @Override
-    public String visitFile(MarkupParser.FileContext context)    
-    {
+    public String visitFile(final MarkupParser.FileContext context) {
         visitChildren(context);
-           
+
         stream.println();
 
         return null;
     }
 
     @Override
-    public String visitTag(MarkupParser.TagContext context)    
-    {
-        String text = "";
+    public String visitTag(final MarkupParser.TagContext context) {
+        StringBuilder text = new StringBuilder();
         String startDelimiter = "", endDelimiter = "";
 
         String id = context.ID(0).getText();
-        
-        switch(id)
-        {
+
+        switch (id) {
             case "b":
-                startDelimiter = endDelimiter = "**";                
-            break;
+                startDelimiter = endDelimiter = "**";
+                break;
             case "u":
-                startDelimiter = endDelimiter = "*";                
-            break;
+                startDelimiter = endDelimiter = "*";
+                break;
             case "quote":
                 String attribute = context.attribute().STRING().getText();
-                attribute = attribute.substring(1,attribute.length()-1);
+                attribute = attribute.substring(1, attribute.length() - 1);
                 startDelimiter = System.lineSeparator() + "> ";
                 endDelimiter = System.lineSeparator() + "> " + System.lineSeparator() + "> – "
-                             + attribute + System.lineSeparator();
-            break;
-        } 
+                    + attribute + System.lineSeparator();
+                break;
+        }
 
-        text += startDelimiter;
+        text.append(startDelimiter);
 
-        for (MarkupParser.ElementContext node: context.element())
-        {                
-            if(node.tag() != null)
-                text += visitTag(node.tag());
-            if(node.content() != null)
-                text += visitContent(node.content());                
-        }        
-        
-        text += endDelimiter;
-        
-        return text;        
+        for (final MarkupParser.ElementContext node : context.element()) {
+            if (node.tag() != null) {
+                text.append(visitTag(node.tag()));
+            }
+            if (node.content() != null) {
+                text.append(visitContent(node.content()));
+            }
+        }
+
+        text.append(endDelimiter);
+
+        return text.toString();
     }
 
     @Override
-    public String visitContent(MarkupParser.ContentContext context)    
-    {          
-        return context.getText();        
-    }    
+    public String visitContent(final MarkupParser.ContentContext context) {
+        return context.getText();
+    }
 
     @Override
-    public String visitElement(MarkupParser.ElementContext context)
-    {
-        if(context.parent instanceof MarkupParser.FileContext)
-        {
-            if(context.content() != null)            
+    public String visitElement(final MarkupParser.ElementContext context) {
+        if (context.parent instanceof MarkupParser.FileContext) {
+            if (context.content() != null) {
                 stream.print(visitContent(context.content()));
-                
-            if(context.tag() != null)
-                stream.print(visitTag(context.tag()));                
-        }    
+            }
+
+            if (context.tag() != null) {
+                stream.print(visitTag(context.tag()));
+            }
+        }
 
         return null;
     }
