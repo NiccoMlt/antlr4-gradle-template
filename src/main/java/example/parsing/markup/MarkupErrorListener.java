@@ -1,16 +1,11 @@
-package me.tomassetti.examples.MarkupParser;
+package example.parsing.markup;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.*;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.BaseErrorListener;
+import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 
-import java.io.PrintStream;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-
-import me.tomassetti.examples.MarkupParser.MarkupParser.FileContext;
 
 public class MarkupErrorListener extends BaseErrorListener {
     private String _symbol = "";

@@ -1,4 +1,4 @@
-package me.tomassetti.examples.MarkupParser;
+package example.parsing.markup;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;

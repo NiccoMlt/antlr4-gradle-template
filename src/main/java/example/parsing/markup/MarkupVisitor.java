@@ -1,4 +1,4 @@
-package me.tomassetti.examples.MarkupParser;
+package example.parsing.markup;
 
 import java.io.PrintStream;
 

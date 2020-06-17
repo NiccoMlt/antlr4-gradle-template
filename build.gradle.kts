@@ -26,7 +26,7 @@ repositories {
 
 dependencies {
   // Use ANTLR version 4
-  antlr("org.antlr:antlr4:4.7.2")
+  antlr("org.antlr:antlr4:4.8")
 
   // Use JUnit Jupiter API for testing.
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
@@ -36,16 +36,17 @@ dependencies {
 }
 
 configure<JavaPluginConvention> {
-  sourceCompatibility = JavaVersion.VERSION_1_7
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-group = "me.tomassetti.examples"
+group = "example.parsing.markup"
 version = "1.0"
 description = "markup-example"
 
 application {
   // Define the main class for the application.
-  mainClassName = "me.tomassetti.examples.MarkupParser.App"
+  mainClassName = "example.parsing.markup.App"
 }
 
 tasks {
@@ -60,7 +61,7 @@ tasks {
 
   generateGrammarSource {
     maxHeapSize = "64m"
-    arguments = arguments + listOf("-visitor", "-long-messages", "-package", "me.tomassetti.examples.MarkupParser")
-    outputDirectory = File("$buildDir/generated-src/antlr/main/me/tomassetti/examples/MarkupParser/")
+    arguments = arguments + listOf("-visitor", "-long-messages", "-package", "example.parsing.markup")
+    outputDirectory = File("$buildDir/generated-src/antlr/main/example/parsing/markup/")
   }
 }
