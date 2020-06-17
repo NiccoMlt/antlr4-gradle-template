@@ -4,10 +4,10 @@ options { tokenVocab=MarkupLexer; }
 
 file        : element* ;
 
-attribute   : ID '=' STRING ; 
+attribute   : ID EQUALS STRING ;
 
 content     : TEXT ;
 
 element     : (content | tag) ;
 
-tag         : '[' ID attribute? ']' element* '[' '/' ID ']' ;
+tag         : OPEN ID attribute? CLOSE element* OPEN SLASH ID CLOSE ;
